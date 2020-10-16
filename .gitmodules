@@ -1,0 +1,6 @@
+[submodule "contiki-ng"]
+	path = contiki-ng
+	url = git@github.com:tperale/contiki-ng.git
+[submodule "sx127x"]
+	path = sx127x
+	url = https://github.com/tperale/sx127x
