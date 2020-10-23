@@ -29,11 +29,13 @@ def reboot_board(ser):
     wait_for_console(ser)
 
 def tx(ser, content):
-    ser.write(b'send %s\r\n' % content)
+    ser.write(b'send %s\r\n' % str(content).encode('utf-8'))
+    wait_for_console(ser)
 
 def rx(ser):
     ser.write(b'recv\r\n')
     line = ser.readline().decode('utf-8')
+    wait_for_console(ser)
 
     if re.search(r'Recv timed out after 10sec', line):
         return None
@@ -41,6 +43,8 @@ def rx(ser):
 
 def channel(ser, chan):
     ser.write(b'ch %i\r\n' % chan)
+    wait_for(ser, r'Changing to channel')
+    wait_for_console(ser)
     time.sleep(0.01)
 
 RX_DONE = 0
@@ -64,7 +68,7 @@ def logging_rx(ser, crange):
     reboot_board(ser)
     for i in range(crange):
         for j in range(crange):
-            print("[rx] Scanning %i" % j)
+            print("[rx] Scanning %i" % i)
             time.sleep(1)
             RX_DONE = 0
             channel(ser, i)
