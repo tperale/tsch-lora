@@ -37,36 +37,39 @@ def wait_for_join(ser):
     return count
 
 def wait_for_drift(ser):
-    # TODO Here we must keep the ASN and depending if the timeslot is a TX or RX slot log differently.
-    # TODO Coordinators can send back the drift diff and correct the drift while listening nodes are in TX slot
-    # TODO Listening node can deduce their drift from the coordinator at each RX slot with packet coming from the coordinator
-    reg = r"\[INFO: TSCH-LOG\s*\]\s*\{asn-(\w|\.)* (link-\d-\d-\d-\d)\ ch-(\d+)} (bc-\d-\d) (rx|tx) LL-(\w{4})->LL-(\w{4}), len (\d+), seq (\d+), dr (\d+|-\d+), edr (\d+|-\d+)"
-    line = ser.readline(reg).decode('utf-8')
-    while not re.search(reg, line):
+    reg = r"\[INFO: TSCH-LOG\s*\]\s*{asn (\w|\.)* link\s*\d\s*\d\s*\d\s*\d\s*\d\s*ch\s*(\d)}\s*\w\w-\d-\d\s*(tx|rx)\s*LL-\w{4}->LL-\w{4},\s*len\s*(\d*),\s*seq\s*(\d*),\s*(.*),\s*dr\s*(-?\d*)"
+    while True:
         line = ser.readline().decode('utf-8')
+        r = re.search(reg, line)
+        if r:
+            return r
 
-LOG_DONE = 0
-EB_SENT = 0
+RX_ASN = []
+RX_CH = []
+RX_DR = []
+
+CURR_LOG = 0
 
 def logging_node(log_number):
-    global LOG_DONE, EB_SENT
-    LOG_DONE = 0
+    global RX_ASN, RX_CH, RX_DR, CURR_LOG
     reboot_board(node)
     wait_for_join(node)
-    for i in range(log_number):
+    while CURR_LOG < log_number:
         # TODO Wait a random length of time after each log
-        EB_SENT = 0
-        wait_for_drift(node)
-        print("[node] After %i scan joined in %i after %i EB" % (retry, (end - start), EB_SENT))
-        LOG_DONE += 1
+        r = wait_for_drift(node)
+        asn = r.group(0)
+        ch = r.group(1)
+        dr = r.group(6)
+        RX_ASN.append(asn)
+        RX_CH.append(ch)
+        RX_DR.append(dr)
+        CURR_LOG += 1
 
 def logging_coordinator(log_number):
-    global LOG_DONE, EB_SENT
+    global CURR_LOG
     reboot_board(coord)
-    while LOG_DONE < log_number:
-        wait_for(coord, r'\[INFO: TSCH\s*\]\s*TSCH:\senqueue\sEB\spacket')
-        print("[coordinator] Sent EB")
-        EB_SENT += 1
+    while CURR_LOG < log_number:
+        time.sleep(0.1)
 
 def start_logging(log_number):
     x = threading.Thread(target=logging_coordinator, args=(log_number,))
@@ -79,4 +82,10 @@ def start_logging(log_number):
     y.join()
 
 if __name__ == "__main__":
-    start_logging(10)
+    start_logging(100)
+    print("----- ASN")
+    print(*RX_ASN, sep="\n")
+    print("----- CH")
+    print(*RX_CH, sep="\n")
+    print("----- DR")
+    print(*RX_DR, sep="\n")
