@@ -37,7 +37,7 @@ def wait_for_join(ser):
     return count
 
 def wait_for_drift(ser):
-    reg = r"\[INFO: TSCH-LOG\s*\]\s*{asn (\w|\.)* link\s*\d\s*\d\s*\d\s*\d\s*\d\s*ch\s*(\d)}\s*\w\w-\d-\d\s*(tx|rx)\s*LL-\w{4}->LL-\w{4},\s*len\s*(\d*),\s*seq\s*(\d*),\s*(.*),\s*dr\s*(-?\d*)"
+    reg = r"\[INFO: TSCH-LOG\s*\]\s*{asn (\w+\.\w+)* link\s*\d\s*\d\s*\d\s*\d\s*\d\s*ch\s*(\d)}\s*\w\w-\d-\d\s*(tx|rx)\s*LL-\w{4}->LL-\w{4},\s*len\s*(\d*),\s*seq\s*(\d*),\s*(.*),\s*dr\s*(-?\d*)"
     while True:
         line = ser.readline().decode('utf-8')
         r = re.search(reg, line)
@@ -57,9 +57,9 @@ def logging_node(log_number):
     while CURR_LOG < log_number:
         # TODO Wait a random length of time after each log
         r = wait_for_drift(node)
-        asn = r.group(0)
-        ch = r.group(1)
-        dr = r.group(6)
+        asn = r.group(1)
+        ch = r.group(2)
+        dr = r.group(7)
         RX_ASN.append(asn)
         RX_CH.append(ch)
         RX_DR.append(dr)
