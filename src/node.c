@@ -118,20 +118,6 @@ udp_rx_callback(struct simple_udp_connection *c,
 }
 #endif
 /*---------------------------------------------------------------------------*/
-/* static unsigned long last_tx, last_rx, last_time, last_cpu, last_lpm; */
-
-/* static unsigned long */
-/* to_permil(unsigned long delta_metric, unsigned long delta_time) */
-/* { */
-/*   return (1000ul * (delta_metric)) / delta_time; */
-/* } */
-
-/* static unsigned long */
-/* to_ms(unsigned long time) */
-/* { */
-/*   return (unsigned) (time * 1000) / ENERGEST_SECOND; */
-/* } */
-
 PROCESS_THREAD(node_process, ev, data)
 {
   PROCESS_BEGIN();

@@ -16,7 +16,7 @@
 #include "random.h"
 #include "sx1272.h"
 
-#define TIMEOUTVALUE (10 * 2000)
+#define TIMEOUTVALUE (5 * 2000)
 
 static PT_THREAD(shell_recv(struct pt *pt, shell_output_func output, char *args))
 {
@@ -161,6 +161,19 @@ static PT_THREAD(shell_ch(struct pt *pt, shell_output_func output, char *args))
   PT_END(pt);
 }
 
+/* static unsigned long last_tx, last_rx, last_time, last_cpu, last_lpm; */
+
+/* static unsigned long */
+/* to_permil(unsigned long delta_metric, unsigned long delta_time) */
+/* { */
+/*   return (1000ul * (delta_metric)) / delta_time; */
+/* } */
+
+/* static unsigned long */
+/* to_ms(unsigned long time) */
+/* { */
+/*   return (unsigned) (time * 1000) / ENERGEST_SECOND; */
+/* } */
 static PT_THREAD(shell_energest(struct pt *pt, shell_output_func output, char *args))
 {
   PT_BEGIN(pt);
