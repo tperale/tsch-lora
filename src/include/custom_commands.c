@@ -1,25 +1,25 @@
 #include "custom_commands.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include "contiki.h"
 #include "dev/serial-line.h"
-#include "dev/uart.h"
 #include "dev/spi.h"
+#include "dev/uart.h"
 #include "netstack.h"
 #include "process.h"
+#include "random.h"
 #include "rtimer-arch.h"
 #include "shell.h"
 #include "shell-commands.h"
+#include "sx1272.h"
 #include "sys/_stdint.h"
 #include "sys/log.h"
-#include "random.h"
-#include "sx1272.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #define TIMEOUTVALUE (5 * 2000)
 
-static PT_THREAD(shell_recv(struct pt *pt, shell_output_func output, char *args))
-{
+#ifndef MAC_CONF_WITH_TSCH
+static PT_THREAD(shell_recv(struct pt *pt, shell_output_func output, char *args)) {
   PT_BEGIN(pt);
   char buf[255];
   int timeout = 0;
@@ -43,14 +43,13 @@ static PT_THREAD(shell_recv(struct pt *pt, shell_output_func output, char *args)
     PT_EXIT(pt);
   }
 
-  int len = NETSTACK_RADIO.read((void*) buf, 255);
+  int len = NETSTACK_RADIO.read((void *)buf, 255);
   NETSTACK_RADIO.off();
   SHELL_OUTPUT(output, "Received (%d bytes): '%s'\n", len, buf);
   PT_END(pt);
 }
 
-static PT_THREAD(shell_send(struct pt *pt, shell_output_func output, char *args))
-{
+static PT_THREAD(shell_send(struct pt *pt, shell_output_func output, char *args)) {
   char *next_args;
 
   PT_BEGIN(pt);
@@ -62,15 +61,14 @@ static PT_THREAD(shell_send(struct pt *pt, shell_output_func output, char *args)
     SHELL_OUTPUT(output, "Sending basic 'helloworld'\n");
     NETSTACK_RADIO.send("helloworld", 10);
     PT_EXIT(pt);
-  } 
+  }
 
   NETSTACK_RADIO.send(args, strlen(args));
 
   PT_END(pt);
 }
 
-static PT_THREAD(shell_toa(struct pt *pt, shell_output_func output, char *args))
-{
+static PT_THREAD(shell_toa(struct pt *pt, shell_output_func output, char *args)) {
   char *next_args;
 
   PT_BEGIN(pt);
@@ -81,18 +79,17 @@ static PT_THREAD(shell_toa(struct pt *pt, shell_output_func output, char *args))
   if (args == NULL) {
     SHELL_OUTPUT(output, "Should specify packet length (in bytes)\n");
     PT_EXIT(pt);
-  } 
+  }
 
   SHELL_OUTPUT(output, "%ld\n", RTIMERTICKS_TO_US_64(TSCH_PACKET_DURATION(atoi(args))));
 
   PT_END(pt);
 }
 
-static PT_THREAD(shell_tsym(struct pt *pt, shell_output_func output, char *args))
-{
-  char* next_args;
-  char* sf;
-  char* bw;
+static PT_THREAD(shell_tsym(struct pt *pt, shell_output_func output, char *args)) {
+  char *next_args;
+  char *sf;
+  char *bw;
 
   PT_BEGIN(pt);
 
@@ -102,21 +99,20 @@ static PT_THREAD(shell_tsym(struct pt *pt, shell_output_func output, char *args)
   if (args == NULL) {
     SHELL_OUTPUT(output, "Should specify <sf> and <bw>.\n");
     PT_EXIT(pt);
-  } 
+  }
 
   SHELL_ARGS_NEXT(bw, next_args);
   if (args == NULL) {
     SHELL_OUTPUT(output, "Should specify <bw>.\n");
     PT_EXIT(pt);
-  } 
+  }
 
   SHELL_OUTPUT(output, "%d\n", t_sym(atoi(sf), atoi(bw)));
 
   PT_END(pt);
 }
 
-static PT_THREAD(shell_scan(struct pt *pt, shell_output_func output, char *args))
-{
+static PT_THREAD(shell_scan(struct pt *pt, shell_output_func output, char *args)) {
   PT_BEGIN(pt);
 
   NETSTACK_RADIO.on();
@@ -139,10 +135,9 @@ static PT_THREAD(shell_scan(struct pt *pt, shell_output_func output, char *args)
   PT_END(pt);
 }
 
-static PT_THREAD(shell_ch(struct pt *pt, shell_output_func output, char *args))
-{
+static PT_THREAD(shell_ch(struct pt *pt, shell_output_func output, char *args)) {
   PT_BEGIN(pt);
-  char* next_args;
+  char *next_args;
 
   SHELL_ARGS_INIT(args, next_args);
 
@@ -150,8 +145,8 @@ static PT_THREAD(shell_ch(struct pt *pt, shell_output_func output, char *args))
   if (args == NULL) {
     SHELL_OUTPUT(output, "Should specify <ch> to switch to.\n");
     PT_EXIT(pt);
-  } 
-  
+  }
+
   int ch = (atoi(args) % TSCH_HOPPING_SEQUENCE_MAX_LEN);
 
   NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, TSCH_DEFAULT_HOPPING_SEQUENCE[ch]);
@@ -160,6 +155,7 @@ static PT_THREAD(shell_ch(struct pt *pt, shell_output_func output, char *args))
 
   PT_END(pt);
 }
+#endif
 
 /* static unsigned long last_tx, last_rx, last_time, last_cpu, last_lpm; */
 
@@ -174,8 +170,7 @@ static PT_THREAD(shell_ch(struct pt *pt, shell_output_func output, char *args))
 /* { */
 /*   return (unsigned) (time * 1000) / ENERGEST_SECOND; */
 /* } */
-static PT_THREAD(shell_energest(struct pt *pt, shell_output_func output, char *args))
-{
+static PT_THREAD(shell_energest(struct pt *pt, shell_output_func output, char *args)) {
   PT_BEGIN(pt);
   /* static unsigned count = 0; */
   /* energest_flush(); */
@@ -202,8 +197,7 @@ static PT_THREAD(shell_energest(struct pt *pt, shell_output_func output, char *a
   PT_END(pt);
 }
 
-static PT_THREAD(shell_record(struct pt *pt, shell_output_func output, char *args))
-{
+static PT_THREAD(shell_record(struct pt *pt, shell_output_func output, char *args)) {
   PT_BEGIN(pt);
   /* last_time = ENERGEST_GET_TOTAL_TIME(); */
   /* last_cpu = energest_type_time(SX127X_ENERGEST_STANDBY); */
@@ -214,23 +208,24 @@ static PT_THREAD(shell_record(struct pt *pt, shell_output_func output, char *arg
 }
 
 const struct shell_command_t custom_shell_commands[] = {
-  { "send", shell_send, "'> send': Send a basic 'helloworld' message using LoRa Radio." },
-  { "recv", shell_recv, "'> recv': Busywait the next message." },
-  { "toa", shell_toa, "'> toa <len> : Calculate the Time On Air in 'us' of a packet of <len> bytes." },
-  { "tsym", shell_tsym, "'> tsym <sf> <bw> : Time in 'us' for a symbol to get transmitted depending on <sf> and <bw>." },
-  { "scan", shell_scan, "'> scan : Check the channel currently used for transmission." },
-  { "ch", shell_ch, "'> ch <ch> : Change transmitting channel." },
-  { "energest", shell_energest, "'> energest': ." },
-  { "record", shell_record, "'> record': ." },
-  { NULL, NULL, NULL },
+#ifndef MAC_CONF_WITH_TSCH
+    {"send", shell_send, "'> send': Send a basic 'helloworld' message using LoRa Radio."},
+    {"recv", shell_recv, "'> recv': Busywait the next message."},
+    {"toa", shell_toa, "'> toa <len> : Calculate the Time On Air in 'us' of a packet of <len> bytes."},
+    {"tsym", shell_tsym, "'> tsym <sf> <bw> : Time in 'us' for a symbol to get transmitted depending on <sf> and <bw>."},
+    {"scan", shell_scan, "'> scan : Check the channel currently used for transmission."},
+    {"ch", shell_ch, "'> ch <ch> : Change transmitting channel."},
+#endif
+    {"energest", shell_energest, "'> energest': ."},
+    {"record", shell_record, "'> record': ."},
+    {NULL, NULL, NULL},
 };
 
 static struct shell_command_set_t custom_shell_command_set = {
-  .next = NULL,
-  .commands = custom_shell_commands,
+    .next = NULL,
+    .commands = custom_shell_commands,
 };
 
 void shell_custom_init(void) {
   shell_command_set_register(&custom_shell_command_set);
 }
-
