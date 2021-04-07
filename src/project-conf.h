@@ -42,30 +42,35 @@
 #define WITH_SECURITY 0
 #endif /* WITH_SECURITY */
 
+#define SX127X_VERSION 0x12
+
 /* USB serial takes space, free more space elsewhere */
 #define SICSLOWPAN_CONF_FRAG 0
 #define UIP_CONF_BUFFER_SIZE 160
 
 #define ENERGEST_CONF_ON 1
-/* #define ENERGEST_CONF_ADDITIONS SX127X_ENERGEST_SLEEP, SX127X_ENERGEST_STANDBY, SX127X_ENERGEST_TX, SX127X_ENERGEST_RX */
+/* #define ENERGEST_CONF_ADDITIONS SX127X_ENERGEST_SLEEP,
+ * SX127X_ENERGEST_STANDBY, SX127X_ENERGEST_TX, SX127X_ENERGEST_RX */
 
 /*******************************************************/
 /******************* NETSTACK       ********************/
 /*******************************************************/
 
 #define NETSTACK_CONF_RADIO sx1272_radio_driver
-#define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE (uint8_t[]){ 0, 1, 2 }
-extern int tsch_packet_duration(size_t len); 
-#define TSCH_PACKET_DURATION(len) tsch_packet_duration(len) 
+#define TSCH_CONF_DEFAULT_HOPPING_SEQUENCE                                     \
+  (uint8_t[]) { 0, 1, 2 }
+extern int tsch_packet_duration(size_t len);
+#define TSCH_PACKET_DURATION(len) tsch_packet_duration(len)
 
 /*******************************************************/
 /******************* TSCH Schedule  ********************/
 /*******************************************************/
 
 /* 6TiSCH minimal schedule length.
- * Larger values result in less frequent active slots: reduces capacity and saves energy.
- * Configure this variable according to the number of node participating in your network */
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 3
+ * Larger values result in less frequent active slots: reduces capacity and
+ * saves energy. Configure this variable according to the number of node
+ * participating in your network */
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 5
 #define TSCH_SCHEDULE_CONF_WITH_6TISCH_MINIMAL 0
 
 /*******************************************************/
@@ -91,6 +96,51 @@ extern int tsch_packet_duration(size_t len);
 #define TSCH_CONF_ADAPTIVE_TIMESYNC 0
 
 #define TSCH_CONF_CHANNEL_SCAN_DURATION CLOCK_SECOND
+
+/* 3 */
+/* #define TSCH_CONF_KEEPALIVE_TIMEOUT (144 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MAX_KEEPALIVE_TIMEOUT (720 * CLOCK_SECOND) */
+/* #define TSCH_CONF_DESYNC_THRESHOLD (14 * TSCH_CONF_KEEPALIVE_TIMEOUT) */
+/* #define TSCH_CONF_EB_PERIOD (600 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MAX_EB_PERIOD (1200 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MIN_EB_PERIOD (300 * CLOCK_SECOND) */
+/* #define RPL_CONF_DIS_INTERVAL (270 * CLOCK_SECOND) */
+/* #define RPL_CONF_DAO_RETRANSMISSION_TIMEOUT (270 * CLOCK_SECOND) */
+/* #define RPL_CONF_DELAY_BEFORE_LEAVING (800 * CLOCK_SECOND) */
+/* #define RPL_CONF_DAO_MAX_RETRANSMISSIONS 15 */
+/* #define RPL_CONF_DIO_INTERVAL_MIN 15 */
+/* #define RPL_CONF_DIO_INTERVAL_DOUBLINGS 6 */
+/* #define NETSTACK_MAX_ROUTE_ENTRIES 5 */
+
+/* 3 */
+/* #define TSCH_CONF_KEEPALIVE_TIMEOUT (192 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MAX_KEEPALIVE_TIMEOUT (960 * CLOCK_SECOND) */
+/* #define TSCH_CONF_DESYNC_THRESHOLD (16 * TSCH_CONF_KEEPALIVE_TIMEOUT) */
+/* #define TSCH_CONF_EB_PERIOD (800 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MAX_EB_PERIOD (1600 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MIN_EB_PERIOD (400 * CLOCK_SECOND) */
+/* #define RPL_CONF_DIS_INTERVAL (360 * CLOCK_SECOND) */
+/* #define RPL_CONF_DAO_RETRANSMISSION_TIMEOUT (360 * CLOCK_SECOND) */
+/* #define RPL_CONF_DELAY_BEFORE_LEAVING (1200 * CLOCK_SECOND) */
+/* #define RPL_CONF_DAO_MAX_RETRANSMISSIONS 15 */
+/* #define RPL_CONF_DIO_INTERVAL_MIN 15 */
+/* #define RPL_CONF_DIO_INTERVAL_DOUBLINGS 6 */
+/* #define NETSTACK_MAX_ROUTE_ENTRIES 5 */
+
+/* 2 */
+/* #define TSCH_CONF_KEEPALIVE_TIMEOUT (96 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MAX_KEEPALIVE_TIMEOUT (480 * CLOCK_SECOND) */
+/* #define TSCH_CONF_DESYNC_THRESHOLD (8 * TSCH_CONF_KEEPALIVE_TIMEOUT) */
+/* #define TSCH_CONF_EB_PERIOD (400 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MAX_EB_PERIOD (800 * CLOCK_SECOND) */
+/* #define TSCH_CONF_MIN_EB_PERIOD (200 * CLOCK_SECOND) */
+/* #define RPL_CONF_DIS_INTERVAL (180 * CLOCK_SECOND) */
+/* #define RPL_CONF_DAO_RETRANSMISSION_TIMEOUT (180 * CLOCK_SECOND) */
+/* #define RPL_CONF_DELAY_BEFORE_LEAVING (600 * CLOCK_SECOND) */
+/* #define RPL_CONF_DAO_MAX_RETRANSMISSIONS 15 */
+/* #define RPL_CONF_DIO_INTERVAL_MIN 15 */
+/* #define RPL_CONF_DIO_INTERVAL_DOUBLINGS 6 */
+/* #define NETSTACK_MAX_ROUTE_ENTRIES 5 */
 
 /* Max time before sending a unicast keep-alive message to the time source */
 #define TSCH_CONF_KEEPALIVE_TIMEOUT (48 * CLOCK_SECOND)
@@ -125,12 +175,12 @@ extern int tsch_packet_duration(size_t len);
 /************* Logging                    **************/
 /*******************************************************/
 
-#define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_WARN
-#define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_INFO
-#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_WARN
-#define TSCH_LOG_CONF_PER_SLOT                     1
+#define LOG_CONF_LEVEL_RPL LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_TCPIP LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_IPV6 LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_6LOWPAN LOG_LEVEL_WARN
+#define LOG_CONF_LEVEL_MAC LOG_LEVEL_INFO
+#define LOG_CONF_LEVEL_FRAMER LOG_LEVEL_WARN
+#define TSCH_LOG_CONF_PER_SLOT 1
 
 #endif /* PROJECT_CONF_H_ */
