@@ -96,7 +96,7 @@ void tsch_schedule_custom(void) {
     tsch_schedule_add_link(sf_custom, LINK_OPTION_TX, LINK_TYPE_NORMAL,
                            &node_1_address, 1, 0, 0);
     tsch_schedule_add_link(sf_custom, LINK_OPTION_RX, LINK_TYPE_NORMAL,
-                           &node_2_address, 2, 0, 0);
+                           &node_1_address, 2, 0, 0);
   }
 }
 /*---------------------------------------------------------------------------*/
