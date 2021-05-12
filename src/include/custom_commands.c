@@ -25,16 +25,18 @@ static PT_THREAD(shell_recv(struct pt *pt, shell_output_func output, char *args)
   int timeout = 0;
 
   NETSTACK_RADIO.on();
-  while (!NETSTACK_RADIO.receiving_packet() && timeout < TIMEOUTVALUE) {
+  while (!NETSTACK_RADIO.receiving_packet() && !NETSTACK_RADIO.pending_packet() && timeout < TIMEOUTVALUE) {
     watchdog_periodic();
     clock_delay_usec(500);
     timeout++;
   }
-  SHELL_OUTPUT(output, "Waiting for pending\n");
-  while (!NETSTACK_RADIO.pending_packet() && timeout < TIMEOUTVALUE) {
-    watchdog_periodic();
-    clock_delay_usec(500);
-    timeout++;
+  if (!NETSTACK_RADIO.pending_packet()) {
+    SHELL_OUTPUT(output, "Waiting for pending\n");
+    while (!NETSTACK_RADIO.pending_packet() && timeout < TIMEOUTVALUE) {
+      watchdog_periodic();
+      clock_delay_usec(500);
+      timeout++;
+    }
   }
 
   if (timeout >= TIMEOUTVALUE) {

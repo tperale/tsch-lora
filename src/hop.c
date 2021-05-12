@@ -39,10 +39,12 @@
 #include "contiki.h"
 #include "custom_commands.h"
 #include "custom_schedule.h"
-#include "net/ipv6/simple-udp.h"
 #include "net/ipv6/uip-ds6-route.h"
 #include "net/ipv6/uip-sr.h"
 #include "net/routing/routing.h"
+#include "random.h"
+#include "sx1272.h"
+#include "sys/energest.h"
 #include "sys/log.h"
 #include "sys/node-id.h"
 
@@ -50,37 +52,16 @@
 #include "net/ipv6/uip-debug.h"
 
 /*---------------------------------------------------------------------------*/
-#include "sys/log.h"
+#include "net/ipv6/simple-udp.h"
+
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
-#define WITH_SERVER_REPLY 1
-#define UDP_CLIENT_PORT 8765
-#define UDP_SERVER_PORT 5678
-
-PROCESS(coordinator_process, "RPL Coordinator");
-AUTOSTART_PROCESSES(&coordinator_process);
+PROCESS(node_process, "RPL Hop");
+AUTOSTART_PROCESSES(&node_process);
 
 /*---------------------------------------------------------------------------*/
-static struct simple_udp_connection udp_conn;
-static void udp_rx_callback(struct simple_udp_connection *c,
-                            const uip_ipaddr_t *sender_addr,
-                            uint16_t sender_port,
-                            const uip_ipaddr_t *receiver_addr,
-                            uint16_t receiver_port, const uint8_t *data,
-                            uint16_t datalen) {
-  LOG_INFO("Received request '%.*s' from ", datalen, (char *)data);
-  LOG_INFO_6ADDR(sender_addr);
-  LOG_INFO_("\n");
-#if WITH_SERVER_REPLY
-  /* send back the same string to the client as an echo reply */
-  LOG_INFO("Sending response.\n");
-  simple_udp_sendto(&udp_conn, data, datalen, sender_addr);
-#endif /* WITH_SERVER_REPLY */
-}
-/*---------------------------------------------------------------------------*/
-
-PROCESS_THREAD(coordinator_process, ev, data) {
+PROCESS_THREAD(node_process, ev, data) {
   PROCESS_BEGIN();
 
 #ifdef MAC_CONF_WITH_NULLMAC
@@ -90,14 +71,7 @@ PROCESS_THREAD(coordinator_process, ev, data) {
   tsch_custom_schedule_init();
 #endif
 
-  NETSTACK_ROUTING.root_start();
   NETSTACK_MAC.on();
-
-#if defined(MAC_CONF_WITH_TSCH) || defined(MAC_CONF_WITH_CSMA)
-  /* Initialize UDP connection */
-  simple_udp_register(&udp_conn, UDP_SERVER_PORT, NULL, UDP_CLIENT_PORT,
-                      udp_rx_callback);
-#endif
 
   PROCESS_END();
 }
